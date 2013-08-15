@@ -1,0 +1,21 @@
+{
+	"name": "bonfire",
+	"version": "0.0.1",
+	"description": "Enables WebRTC Peers to act as Signaling Servers",
+	"main": "bonfire.js",
+	"keywords": [
+		"Signal Peer",
+		"P2P"
+	],
+	"dependencies": {
+		"signalfire": "0.0.5"
+	},
+	"devDependencies": {
+	},
+	"contributors": [
+		{
+			"name": "Travis Wimer",
+			"url": "http://traviswimer.com"
+		}
+	]
+}
