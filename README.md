@@ -32,16 +32,13 @@ _These files can also be found in the SignalFire.js GitHub repo:_ [SignalFire.js
 Bonfire is intended to easily integrate with [SignalFire.js](https://github.com/traviswimer/SignalFire.js), which is used in the example below:
 
 ```js
-var listOfPeerDatachannels = [
-	// This should contain datachannel objects
-];
 var mySignalingOptions = {
 
 	// A function that will be called when another peer calls `requestPeer`
 	onSignalingRequest: function(configData){
 		// Must return a datachannel. The requesting peer will then be connected to the
 		// peer at the other end of the datachannel
-		return listOfPeerDatachannels[0];
+		return datachannelOfAnotherPeer;
 	},
 	respondingConnector: function(newPeerConnection, configData, callback){
 		var signalFireOptions = {
@@ -66,7 +63,7 @@ var mySignalingOptions = {
 		theSocket = signalfire.connect(signalFireOptions, function(theConnection){});
 	}
 };
-var bonfireObject = bonfire(peerConnection.channels.bonfire, mySignalingOptions);
+var bonfireObject = bonfire(datachannelOfAPeer, mySignalingOptions);
 bonfireObject.requestPeer({
 	// optional parameters to pass to the signaling server
 });
