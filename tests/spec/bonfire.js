@@ -58,7 +58,7 @@ function createSignalfireConnection(server, startedCallback, completedCallback, 
 
 			function setupConnection(){
 				if(!isAnswer){
-					var channelOptions = {reliable: true};
+					var channelOptions = {reliable: false};
 					newConnection.channel = newConnection.createDataChannel("bonfire"+dataChannelCounter, channelOptions);
 					newConnection.channel.onmessage = onMessageAction;
 
@@ -100,6 +100,18 @@ function createSignalfireConnection(server, startedCallback, completedCallback, 
 function createBonfire(peerConnection, connectionArray, successCallback){
 	successCallback = successCallback || function(){};
 
+
+
+	function trySending(sendChannel){
+		setTimeout(function(){
+			try{
+				sendChannel.send("TEST");
+			}catch(e){
+				trySending();
+			}
+		}, 500);
+	}
+
 	//Connect first peer
 	var mySignalingOptions = {
 		onSignalingRequest: function(){
@@ -113,16 +125,7 @@ function createBonfire(peerConnection, connectionArray, successCallback){
 					callback();
 				},function(theConnection){
 					connectionArray.push(theConnection);
-
-					function trySending(){
-						setTimeout(function(){
-							try{
-								theConnection.channel.send("TEST");
-							}catch(e){
-								trySending();
-							}
-						}, 500);
-					}
+					trySending(theConnection.channel);
 				},
 				successCallback
 			);
@@ -135,7 +138,7 @@ function createBonfire(peerConnection, connectionArray, successCallback){
 				},function(theConnection){
 					connectionArray.push(theConnection);
 					
-					theConnection.channel.send("TEST");
+					trySending(theConnection.channel);
 				},
 				successCallback
 			);
@@ -238,7 +241,7 @@ describe("bonfire", function() {
 
 			bonfireConnection1.requestPeer({});
 
-		}, 60000);
+		}, 40000);
 	});
 
 });
