@@ -1,4 +1,4 @@
-# Bonfire.js
+# Bonfires.js
 
 WebRTC/RTCPeerConnection signaling library to allow browser-based users to act as signaling servers for other peers.
 
@@ -14,6 +14,18 @@ Bonfire allows you to do 3 things:
 1.	Request peer signaling from another peer
 2.	Listen for signaling requests from other peers
 3.	Listen for connection requests from a signaling peer
+
+## Installation ##
+
+*	If you use NPM, you can download Bonfires with this command:
+`npm install bonfires`
+*	The main Bonfire file is `bonfire.js`
+*	If you are using SignalFire.js, you will also need to include the following scripts that will be downloaded by NPM:
+	1.	`SignalFire.js/client/src/signalfire-client.js`
+	2.	`SignalFire.js/client/src/adaptor.js`
+	3.	`SignalFire.js/client/src/socket.io.js`
+
+_These files can also be found in the SignalFire.js GitHub repo:_ [SignalFire.js](https://github.com/traviswimer/SignalFire.js)
 
 ## Example ##
 
