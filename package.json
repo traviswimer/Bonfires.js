@@ -8,7 +8,7 @@
 		"P2P"
 	],
 	"dependencies": {
-		"signalfire": "0.0.5"
+		"signalfire": "0.0.6"
 	},
 	"devDependencies": {
 	},
