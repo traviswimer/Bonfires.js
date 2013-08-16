@@ -1,5 +1,5 @@
 /**********************************/
-/* Bonfire Javascript Library     */
+/* Bonfires Javascript Library     */
 /* Version: 0.0.1                 */
 /*                                */
 /* Copyright 2013 Travis Wimer    */
