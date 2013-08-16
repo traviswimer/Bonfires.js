@@ -116,7 +116,7 @@ var bonfire = function(initiatorDataChannel, options){
 					var newPeerId = parsedData.peerId;
 
 					// Should retrieve a datachannel to communicate through
-					var newPeersDatachannel = onSignalingRequest(parsedData.config);
+					var newPeersDatachannel = onSignalingRequest(parsedData.data);
 					var newPeersReliableDataChannel = signalingForPeers[newPeerId] = createReliableChannel(
 						newPeersDatachannel,
 						handleIncomingMessage,
