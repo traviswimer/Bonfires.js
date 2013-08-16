@@ -1,6 +1,6 @@
 {
-	"name": "bonfire",
-	"version": "0.0.1",
+	"name": "bonfires",
+	"version": "0.0.2",
 	"description": "Enables WebRTC Peers to act as Signaling Servers",
 	"main": "bonfire.js",
 	"keywords": [
