@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Simple Bonfire.js Example</title>
+	<meta charset='utf-8'>
+	<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+	<div id="connected-list" class="list">
+		<div class="heading">
+			<h1>Connected to:</h1>
+			<div>Click a peer to see other peers they can connect you to.</div>
+		</div>
+		<div class="inner-box"></div>
+	</div>
+	<div id="connect-options" class="list">
+		<div class="heading">
+			<h1>Available Peers:</h1>
+			<div>Click a peer to create connection</div>
+		</div>
+		<div class="inner-box"></div>
+	</div>
+
+	<div id="instructions-container" class="list">
+		<div class="heading">
+			<h1 id="peer-name">Connecting...</h1>
+		</div>
+		<div id="instructions">
+			<p>To use this simple example, just start 'server.js' using Node and open this page in multiple tabs.</p>
+			<p>Each tab will create a peer that is connected to the most recently connected peer.</p>
+			<p>Click on an "available peer" to request a connection with that peer.</p>
+		<div>
+	</div>
+
+	<script type="text/javascript" src="../../node_modules/signalfire/client/src/adaptor.js"></script>
+	<script type="text/javascript" src="../../node_modules/signalfire/client/src/socket.io.js"></script>
+	<script type="text/javascript" src="../../node_modules/signalfire/client/src/signalfire-client.js"></script>
+	<script type="text/javascript" src="../../bonfire.js"></script>
+
+	<script type="text/javascript" src="connect.js"></script>
+
+</body>
+</html>

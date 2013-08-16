@@ -1,0 +1,62 @@
+html{
+	background-color: #3589ff;
+	height: 100%;
+}
+
+.heading{
+	height: 100px;
+}
+	h1{
+		margin: 7px 0 3px;
+	}
+
+.list{
+	float: left;
+	margin: 0 5%;
+	width: 20%;
+}
+
+#instructions-container h1{
+	color: #FFF;
+	font-family: arial;
+	text-shadow: 1px 1px 4px #000;
+}
+#instructions{
+	background-color: #cef5ff;
+	border: 1px solid #333;
+	float: left;
+	font-family: arial;
+	font-size: 1.2em;
+	font-weight: bold;
+	padding: 3%;
+}
+
+.inner-box{
+	background-color: #FFF;
+	border: 1px solid #333;
+	box-shadow: 2px 2px 2px 2px rgba(2, 2, 2, 0.3), 
+		-2px -2px 2px 2px rgba(2, 2, 2, 0.3);
+	font-family: arial;
+	font-weight: bold;
+	height: 400px;
+	overflow: auto;
+	padding: 2px;
+}
+	.peer-option{
+		border-bottom: 1px solid #444;
+		cursor: pointer;
+		padding: 0 3px;
+	}
+	.peer-option:hover{
+		background-color: #91fffd;
+	}
+	.peer-loading{
+		background-color: #FF0;
+		border-bottom: 1px solid #444;
+		padding: 0 3px;
+	}
+	.peer-loaded{
+		background-color: #51ff65;
+		border-bottom: 1px solid #444;
+		padding: 0 3px;
+	}
