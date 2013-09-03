@@ -1,6 +1,6 @@
 /**********************************/
 /* Bonfires Javascript Library     */
-/* Version: 0.0.1                 */
+/* Version: 0.0.3                 */
 /*                                */
 /* Copyright 2013 Travis Wimer    */
 /* http://traviswimer.com         */
@@ -116,21 +116,26 @@ var bonfire = function(initiatorDataChannel, options){
 					var newPeerId = parsedData.peerId;
 
 					// Should retrieve a datachannel to communicate through
-					var newPeersDatachannel = onSignalingRequest(parsedData.data);
-					var newPeersReliableDataChannel = signalingForPeers[newPeerId] = createReliableChannel(
-						newPeersDatachannel,
-						handleIncomingMessage,
-						"responder"
-					);
-					
+					var newPeersDatachannel = onSignalingRequest(parsedData.data) || false;
 
-					// Send new peer an offer request
-					var offerRequest = {
-						peerId: newPeerId,
-						type: "serverRequestingOffer"
-					};
+					// If no datachannel is returned, do nothing.
+					// This allows a peer to stop accepting signaling requests
+					if(newPeersDatachannel){
+						var newPeersReliableDataChannel = signalingForPeers[newPeerId] = createReliableChannel(
+							newPeersDatachannel,
+							handleIncomingMessage,
+							"responder"
+						);
+						
 
-					newPeersReliableDataChannel.send( JSON.stringify(offerRequest) );
+						// Send new peer an offer request
+						var offerRequest = {
+							peerId: newPeerId,
+							type: "serverRequestingOffer"
+						};
+
+						newPeersReliableDataChannel.send( JSON.stringify(offerRequest) );
+					}
 					break;
 
 				case "clientSendingOffer":
