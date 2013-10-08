@@ -1,17 +1,20 @@
 /**********************************/
-/* Bonfires Javascript Library     */
-/* Version: 0.0.3                 */
+/* Bonfires Javascript Library    */
 /*                                */
 /* Copyright 2013 Travis Wimer    */
 /* http://traviswimer.com         */
 /*                                */
 /* Released under the MIT license */
 /**********************************/
-
-
+var channelsArray;
+var allSignalings = [];
 (function(){
 "use strict";
 
+// holds all the channels and the connection IDs
+channelsArray = [];
+
+// the main function used for creating bonfire objects
 var bonfire = function(initiatorDataChannel, options){
 	/*
 		--OPTIONS--
@@ -61,15 +64,20 @@ var bonfire = function(initiatorDataChannel, options){
 		var respondingConnector = options.respondingConnector || function(){throwError(new Error("Bonfire Err: respondingConnector was never defined"));};
 		var initiatingConnector = options.initiatingConnector || function(){throwError(new Error("Bonfire Err: initiatingConnector was never defined"));};
 
+		var connectingToPeers = {};
+		var signalingForPeers = {};
+
+		allSignalings.push(signalingForPeers);
+
+		var initiatorPeerId = makePeerId();
+
 		// object used for sending reliable messages across datachannels
 		var initiatorReliableChannel = createReliableChannel(
 			initiatorDataChannel,
 			handleIncomingMessage,
-			"initiator"
+			"initiator",
+			initiatorPeerId
 		);
-
-		var connectingToPeers = {};
-		var signalingForPeers = {};
 
 	/*____________________________________________________________________________*/
 
@@ -106,12 +114,14 @@ var bonfire = function(initiatorDataChannel, options){
 				case "serverRequestingOffer":
 					// Signaler is requesting a connection offer to send to another peer
 					console.log("Signaler is requesting a connection offer to send to another peer");
+					console.dir(parsedData);
 					sendOffer(parsedData.peerId, parsedData.data);
 					break;
 
 				case "peerRequest":
 					// Signaler received peer request from initiator
 					console.log("Signaler received peer request from initiator");
+					console.dir(parsedData);
 
 					var newPeerId = parsedData.peerId;
 
@@ -124,8 +134,12 @@ var bonfire = function(initiatorDataChannel, options){
 						var newPeersReliableDataChannel = signalingForPeers[newPeerId] = createReliableChannel(
 							newPeersDatachannel,
 							handleIncomingMessage,
-							"responder"
+							"responder",
+							parsedData.peerId
 						);
+
+						console.log("SIGNALING FOR PEER CREATED");
+						console.log(signalingForPeers);
 						
 
 						// Send new peer an offer request
@@ -134,13 +148,14 @@ var bonfire = function(initiatorDataChannel, options){
 							type: "serverRequestingOffer"
 						};
 
-						newPeersReliableDataChannel.send( JSON.stringify(offerRequest) );
+						signalingForPeers[parsedData.peerId].send( offerRequest, parsedData.peerId );
 					}
 					break;
 
 				case "clientSendingOffer":
 					// Signaler received a connection offer from the responding peer
 					console.log("Signaler received a connection offer from the responding peer");
+					console.dir(parsedData);
 
 					if(parsedData.peerId){
 						var theOffer = {
@@ -148,13 +163,17 @@ var bonfire = function(initiatorDataChannel, options){
 							type: "serverSendingOffer",
 							offer: parsedData.offer
 						};
-						initiatorReliableChannel.send( JSON.stringify(theOffer) );
+						initiatorReliableChannel.send( theOffer, parsedData.peerId );
+						console.log("Initiator: "+initiatorPeerId+" - PeerId: "+parsedData.peerId);
+						console.log(initiatorReliableChannel);
 					}
 					break;
 
 				case "clientSendingAnswer":
 					// Signaler received a connection answer from the initiating peer 
 					console.log("Signaler received a connection answer from the initiating peer");
+					console.dir(parsedData);
+					console.log(signalingForPeers);
 
 					if(parsedData.peerId){
 						var theAnswer = {
@@ -162,20 +181,29 @@ var bonfire = function(initiatorDataChannel, options){
 							type: "serverSendingAnswer",
 							answer: parsedData.answer
 						};
-						signalingForPeers[parsedData.peerId].send( JSON.stringify(theAnswer) );
+
+						// Make sure the peer id applies to this peer
+						if(typeof signalingForPeers[parsedData.peerId] !== 'undefined'){
+							signalingForPeers[parsedData.peerId].send( theAnswer );
+						}
 					}
 					break;
 
 				case "clientSendingIce":
 					// Signaler received an ICE candidate from one of the peers
-					console.log("Signaler received an ICE candidate from one of the peers");
+					//console.log("Signaler received an ICE candidate from one of the peers");
 					
 					// Determine which peer sent the candidate
 					if(messageSource === "initiator"){
-						sendIceCandidate(
-							signalingForPeers[parsedData.peerId],
-							parsedData
-						);
+
+						// Make sure the peer id applies to this peer
+						if(typeof signalingForPeers[parsedData.peerId] !== 'undefined'){
+							sendIceCandidate(
+								signalingForPeers[parsedData.peerId],
+								parsedData
+							);
+						}
+
 					}else{
 						sendIceCandidate(
 							initiatorReliableChannel,
@@ -226,7 +254,7 @@ var bonfire = function(initiatorDataChannel, options){
 					candidate: parsedData.candidate
 				};
 
-				datachannel.send( JSON.stringify(iceObject) );
+				datachannel.send( iceObject );
 			}catch(e){
 				throwError(e);
 			}
@@ -253,7 +281,7 @@ var bonfire = function(initiatorDataChannel, options){
 			function emit(messageName, messageObject){
 				messageObject.type = messageName;
 
-				var objToSend = JSON.stringify(messageObject);
+				var objToSend = messageObject;
 
 				try{
 					initiatorReliableChannel.send(objToSend);
@@ -303,7 +331,7 @@ var bonfire = function(initiatorDataChannel, options){
 		function makePeerId(){
 			var peerId = "";
 			var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-			for(var i=0; i < 20; i++){
+			for(var i=0; i < 5; i++){
 				peerId += chars.charAt( Math.floor(Math.random() * chars.length) );
 			}
 			return peerId;
@@ -327,7 +355,7 @@ var bonfire = function(initiatorDataChannel, options){
 					type: 'peerRequest',
 					data: configData
 				};
-				initiatorReliableChannel.send( JSON.stringify(peerRequestObject) );
+				initiatorReliableChannel.send( peerRequestObject );
 			});
 			newPeerConnection.receive({
 				type: 'connect'
@@ -382,7 +410,35 @@ window.bonfire = bonfire;
 // is used to split up messages as neccesary.
 /*****************************************************************************/
 
-	var createReliableChannel = function(dataChannel, onMessage, peerType){
+	var createReliableChannel = function(dataChannel, onMessage, peerType, peerId){
+
+		//console.log("Created Reliable channel");
+		//console.log(arguments);
+
+	//////////////////////////////////////
+	// Check if datachannel has already //
+	// beeen wrapped                    //
+	//////////////////////////////////////////////////
+	//                                              //
+
+		for(var i=0; i<channelsArray.length; i++){
+			if(channelsArray[i].channel === dataChannel){
+				/*var oldOnMsg = channelsArray[i].channel.onmessage;
+				channelsArray[i].channel.onmessage = function(event){
+					oldOnMsg(event);
+					receiveData(event);
+				};*/
+				console.log("Gonna stick with the same channel BITCHESS!!!");
+				channelsArray[i].addPeer(peerId, onMessage, peerType);
+				return channelsArray[i];
+			}
+		}
+
+	//                                              //
+	//////////////////////////////////////////////////
+
+
+
 	//////////////////////////////////////////////
 	// Data is sent using the following format	//
 	// Message: 1-17:MyMessageHere				//
@@ -390,11 +446,18 @@ window.bonfire = bonfire;
 	// ACKback: 1-17b							//
 	//////////////////////////////////////////////
 
+		// Object to hold functions to be call depending on which peer is to
+		// receieve the message
+		var peersHolder = {};
+
 		var datachannelACKer = {
+			addPeer: addPeer,
+			channel: dataChannel,
 			getState: function(){
 				return state;
 			},
-			send: send
+			send: send,
+			peersHolder: peersHolder
 		};
 
 
@@ -421,6 +484,15 @@ window.bonfire = bonfire;
 		// Sends message every 0.5 seconds to check for ACKer connection on peer
 		var connectionCheckInterval = setInterval(sendConnectionChecks, 500);
 
+
+		var receivedData = [];
+		var rdInterval = setInterval(function(){
+			if(receivedData.length !== 0){
+				console.log(receivedData);
+				receivedData = [];
+			}
+		}, 3000);
+
 	//                                              //
 	//////////////////////////////////////////////////
 
@@ -432,6 +504,7 @@ window.bonfire = bonfire;
 
 		// Is called when new data is received
 		function receiveData(event){
+			console.log("Recieved data");
 			var data = event.data;
 
 			// Determines the type of message and retrieves info
@@ -439,6 +512,11 @@ window.bonfire = bonfire;
 			var msgType = parsedData.type;
 
 			var msg = "";
+
+
+
+			receivedData.push(parsedData);
+
 
 			// end connection check when message received
 			if(state === "waiting"){
@@ -465,7 +543,7 @@ window.bonfire = bonfire;
 						// Will timeout and resend ACK every 2 seconds, until
 						// an ACK-back is received
 						var sendingInterval = setInterval(function(messageNumber, chunkNumber){
-							formatAndRespond(messageNumber, chunkNumber);
+							formatAndRespond(messageNumber, chunkNumber, parsedData.peerId);
 						}, 2000, parsedData.messageId, parsedData.chunkId);
 
 
@@ -479,11 +557,11 @@ window.bonfire = bonfire;
 						if(parsedData.isEnd){
 							// Received final message chunk
 							// Isn't necessarily in order though
-							returnMessage(parsedData.messageId, parsedData.chunkId);
+							returnMessage(parsedData.messageId, parsedData.chunkId, parsedData.peerId);
 						}
 
 
-						formatAndRespond(parsedData.messageId, parsedData.chunkId);
+						formatAndRespond(parsedData.messageId, parsedData.chunkId, parsedData.peerId);
 					}
 
 					break;
@@ -499,7 +577,7 @@ window.bonfire = bonfire;
 
 					}
 
-					formatAndSendMessage(parsedData.messageId, parsedData.chunkId);
+					formatAndSendMessage(parsedData.messageId, parsedData.chunkId, parsedData.peerId);
 					break;
 
 				case "back":
@@ -520,6 +598,13 @@ window.bonfire = bonfire;
 
 		// parses the message to determine message type and ID info.
 		function parseMessage(data){
+
+			// First retrieve the peer ID from the beginning of the string
+			var peerIdEnd = data.indexOf("-");
+			var peerId = data.substr(0, peerIdEnd);
+			data = data.substr(peerIdEnd + 1);
+
+
 			// All regexs check if the string starts with a message number,
 			// then a "-" followed by a chunk number, followed by a type
 			// specifier (":", "a", "b", "!")
@@ -532,6 +617,7 @@ window.bonfire = bonfire;
 
 				return {
 					type: "message",
+					peerId: peerId,
 					messageId: initMsgMatch[1],
 					chunkId: initMsgMatch[2],
 					message: initMsgMatch[3]
@@ -551,6 +637,7 @@ window.bonfire = bonfire;
 
 				return {
 					type: "ack",
+					peerId: peerId,
 					messageId: ackMsgMatch[1],
 					chunkId: ackMsgMatch[2]
 				};
@@ -562,6 +649,7 @@ window.bonfire = bonfire;
 			if(ackBackMsgMatch){
 				return {
 					type: "back",
+					peerId: peerId,
 					messageId: ackBackMsgMatch[1],
 					chunkId: ackBackMsgMatch[2]
 				};
@@ -573,6 +661,7 @@ window.bonfire = bonfire;
 			if(endMsgMatch){
 				return {
 					type: "message",
+					peerId: peerId,
 					messageId: endMsgMatch[1],
 					chunkId: endMsgMatch[2],
 					isEnd: true
@@ -590,7 +679,7 @@ window.bonfire = bonfire;
 
 
 		// formats message and sends
-		function formatAndSendMessage(messageNumber, chunkNumber){
+		function formatAndSendMessage(messageNumber, chunkNumber, peerId){
 
 			var chunkInfo = sentMessages[messageNumber][chunkNumber];
 
@@ -598,10 +687,10 @@ window.bonfire = bonfire;
 
 			switch(chunkInfo.state){
 				case "message":
-					formattedMessage = messageNumber + "-" + chunkNumber + ":" + chunkInfo.data;
+					formattedMessage = peerId + "-" + messageNumber + "-" + chunkNumber + ":" + chunkInfo.data;
 					break;
 				case "received":
-					formattedMessage = messageNumber + "-" + chunkNumber + "b";
+					formattedMessage = peerId + "-" + messageNumber + "-" + chunkNumber + "b";
 					break;
 			}
 
@@ -610,11 +699,11 @@ window.bonfire = bonfire;
 		}
 
 		// formats message end chunk and sends
-		function formatAndSendEnd(messageNumber, chunkNumber){
+		function formatAndSendEnd(messageNumber, chunkNumber, peerId){
 
 			var chunkInfo = sentMessages[messageNumber][chunkNumber];
 
-			var formattedMessage = messageNumber + "-" + chunkNumber + "!";
+			var formattedMessage = peerId + "-" + messageNumber + "-" + chunkNumber + "!";
 
 			sendDatachannelMessage(formattedMessage);
 
@@ -622,11 +711,11 @@ window.bonfire = bonfire;
 
 
 		// formats response and sends
-		function formatAndRespond(messageNumber, chunkNumber){
+		function formatAndRespond(messageNumber, chunkNumber, peerId){
 
 			var chunkInfo = receivedMessages[messageNumber][chunkNumber];
 
-			var formattedMessage = messageNumber + "-" + chunkNumber + "a";
+			var formattedMessage = peerId + "-" + messageNumber + "-" + chunkNumber + "a";
 			
 
 			try{
@@ -695,27 +784,37 @@ window.bonfire = bonfire;
 		}
 
 
-		function returnMessage(messageId, endId){
+		function returnMessage(messageId, endId, peerId){
 			var numChunks = Object.keys(receivedMessages[messageId]).length-1;
 
 			endId = endId*1;
 
 
 			if(numChunks !== endId){
-				setTimeout(returnMessage, 1000, messageId, endId);
+				setTimeout(returnMessage, 1000, messageId, endId, peerId);
 			}else{
 				var fullMessage = "";
 				for(var i=0; i<numChunks; i++){
 					fullMessage += receivedMessages[messageId][i].data;
 				}
 
-				onMessage(fullMessage, peerType);
+				//console.log("sending to handler");
+				//console.dir(peersHolder);
+				if(!peersHolder[peerId]){
+					addPeer(peerId, onMessage, peerType);
+				}
+				if(typeof peersHolder[peerId].handler !== 'function'){
+					console.log("NOT A FUNCTION");
+					console.log(peersHolder[peerId].handler);
+				}
+				peersHolder[peerId].handler(fullMessage, peersHolder[peerId].peerType);
 			}
 		}
 
 
 		// sends a message across the datachannel
 		function sendDatachannelMessage(message){
+
 			try{
 				dataChannel.send(message);
 			}catch(e){
@@ -733,7 +832,11 @@ window.bonfire = bonfire;
 	//                                              //
 
 		// Creates, processes, and sends a new message
-		function send(message){
+		function send(messageJSON, peerId){
+			
+			peerId = peerId || messageJSON.peerId;
+
+			var message = JSON.stringify(messageJSON);
 
 			var curMessageNum = messageNumber++;
 
@@ -748,7 +851,7 @@ window.bonfire = bonfire;
 					// Will timeout and resend message every 2 seconds, until
 					// an ACK is received
 					var sendingInterval = setInterval(function(curMessageNum, chunkNumber){
-						formatAndSendMessage(curMessageNum, chunkNumber);
+						formatAndSendMessage(curMessageNum, chunkNumber, peerId);
 					}, 2000, curMessageNum, i);
 
 					// Store info to use later
@@ -759,7 +862,7 @@ window.bonfire = bonfire;
 					};
 
 
-					formatAndSendMessage(curMessageNum, i);
+					formatAndSendMessage(curMessageNum, i, peerId);
 				}(curMessageNum, i, chunks) );
 			}
 
@@ -767,15 +870,23 @@ window.bonfire = bonfire;
 			// Create the "END" message
 			var endChunkNumber = chunks.length;
 			var sendingInterval = setInterval(function(curMessageNum, chunkNumber){
-				formatAndSendEnd(curMessageNum, chunkNumber);
+				formatAndSendEnd(curMessageNum, chunkNumber, peerId);
 			}, 2000, curMessageNum, endChunkNumber);
 			// Store info to use later
 			sentMessages[curMessageNum][endChunkNumber] = {
 				state: "message",
 				interval: sendingInterval
 			};
-			formatAndSendEnd(curMessageNum, endChunkNumber);
+			formatAndSendEnd(curMessageNum, endChunkNumber, peerId);
 
+		}
+
+
+		// Adds another peer to the current channel
+		function addPeer(peerId, messageHandler, type){
+			peersHolder[peerId] = {};
+			peersHolder[peerId].handler = messageHandler;
+			peersHolder[peerId].peerType = type;
 		}
 
 	//                                              //
@@ -789,6 +900,10 @@ window.bonfire = bonfire;
 
 		// Make the ACKer take over receiving datachannel messages
 		dataChannel.onmessage = receiveData;
+
+		channelsArray.push(datachannelACKer);
+
+		datachannelACKer.addPeer(peerId, onMessage, peerType);
 
 		return datachannelACKer;
 
