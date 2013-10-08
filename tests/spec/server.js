@@ -11,11 +11,6 @@ var sf=signalfire.listen(3333,function(peer){
 		}
 	});
 
-
-	peer.socket.on('disconnect', function(data){
-		peer.socket.disconnect();
-	});
-
 },function(error){
 	console.log(error);
 });
