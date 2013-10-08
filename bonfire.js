@@ -114,14 +114,13 @@ var bonfire = function(initiatorDataChannel, options){
 				case "serverRequestingOffer":
 					// Signaler is requesting a connection offer to send to another peer
 					console.log("Signaler is requesting a connection offer to send to another peer");
-					console.dir(parsedData);
+
 					sendOffer(parsedData.peerId, parsedData.data);
 					break;
 
 				case "peerRequest":
 					// Signaler received peer request from initiator
 					console.log("Signaler received peer request from initiator");
-					console.dir(parsedData);
 
 					var newPeerId = parsedData.peerId;
 
@@ -138,10 +137,6 @@ var bonfire = function(initiatorDataChannel, options){
 							parsedData.peerId
 						);
 
-						console.log("SIGNALING FOR PEER CREATED");
-						console.log(signalingForPeers);
-						
-
 						// Send new peer an offer request
 						var offerRequest = {
 							peerId: newPeerId,
@@ -155,7 +150,6 @@ var bonfire = function(initiatorDataChannel, options){
 				case "clientSendingOffer":
 					// Signaler received a connection offer from the responding peer
 					console.log("Signaler received a connection offer from the responding peer");
-					console.dir(parsedData);
 
 					if(parsedData.peerId){
 						var theOffer = {
@@ -164,16 +158,12 @@ var bonfire = function(initiatorDataChannel, options){
 							offer: parsedData.offer
 						};
 						initiatorReliableChannel.send( theOffer, parsedData.peerId );
-						console.log("Initiator: "+initiatorPeerId+" - PeerId: "+parsedData.peerId);
-						console.log(initiatorReliableChannel);
 					}
 					break;
 
 				case "clientSendingAnswer":
 					// Signaler received a connection answer from the initiating peer 
 					console.log("Signaler received a connection answer from the initiating peer");
-					console.dir(parsedData);
-					console.log(signalingForPeers);
 
 					if(parsedData.peerId){
 						var theAnswer = {
@@ -191,7 +181,6 @@ var bonfire = function(initiatorDataChannel, options){
 
 				case "clientSendingIce":
 					// Signaler received an ICE candidate from one of the peers
-					//console.log("Signaler received an ICE candidate from one of the peers");
 					
 					// Determine which peer sent the candidate
 					if(messageSource === "initiator"){
@@ -412,8 +401,6 @@ window.bonfire = bonfire;
 
 	var createReliableChannel = function(dataChannel, onMessage, peerType, peerId){
 
-		//console.log("Created Reliable channel");
-		//console.log(arguments);
 
 	//////////////////////////////////////
 	// Check if datachannel has already //
@@ -423,12 +410,6 @@ window.bonfire = bonfire;
 
 		for(var i=0; i<channelsArray.length; i++){
 			if(channelsArray[i].channel === dataChannel){
-				/*var oldOnMsg = channelsArray[i].channel.onmessage;
-				channelsArray[i].channel.onmessage = function(event){
-					oldOnMsg(event);
-					receiveData(event);
-				};*/
-				console.log("Gonna stick with the same channel BITCHESS!!!");
 				channelsArray[i].addPeer(peerId, onMessage, peerType);
 				return channelsArray[i];
 			}
@@ -488,7 +469,6 @@ window.bonfire = bonfire;
 		var receivedData = [];
 		var rdInterval = setInterval(function(){
 			if(receivedData.length !== 0){
-				console.log(receivedData);
 				receivedData = [];
 			}
 		}, 3000);
@@ -504,7 +484,6 @@ window.bonfire = bonfire;
 
 		// Is called when new data is received
 		function receiveData(event){
-			console.log("Recieved data");
 			var data = event.data;
 
 			// Determines the type of message and retrieves info
@@ -798,14 +777,8 @@ window.bonfire = bonfire;
 					fullMessage += receivedMessages[messageId][i].data;
 				}
 
-				//console.log("sending to handler");
-				//console.dir(peersHolder);
 				if(!peersHolder[peerId]){
 					addPeer(peerId, onMessage, peerType);
-				}
-				if(typeof peersHolder[peerId].handler !== 'function'){
-					console.log("NOT A FUNCTION");
-					console.log(peersHolder[peerId].handler);
 				}
 				peersHolder[peerId].handler(fullMessage, peersHolder[peerId].peerType);
 			}
