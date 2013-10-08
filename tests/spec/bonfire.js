@@ -214,6 +214,15 @@ describe("bonfire", function() {
 	describe("Attach Bonfire to each peer", function(){
 		it("Signaling peer attached to other peers", function(){
 
+			if(typeof(thePeers[0]) === "undefined"){
+				console.log("its not defined but here it is anyway:");
+				console.log(thePeers[0][0]);
+			}else{
+				console.log("It is defined, what lies...:");
+				console.log(thePeers[0][0]);
+			}
+
+
 			var bonfireConnection1 = thePeers[0][0].bonfire = createBonfire(thePeers[0][0], thePeers[0]);
 			expect(typeof bonfireConnection1).toEqual('object');
 
@@ -223,11 +232,11 @@ describe("bonfire", function() {
 
 		});
 
-		async.it("Peer requested signaling", function(done){
+		async.it("Peers requested signaling simultaniously", function(done){
 			completeCount = 0;
 
 			var theCallback = function(){
-				upCompleteCount(2, done);
+				upCompleteCount(3, done);
 			};
 
 
@@ -240,8 +249,12 @@ describe("bonfire", function() {
 
 
 			bonfireConnection1.requestPeer({});
+			bonfireConnection2.requestPeer({});
 
-		}, 40000);
+		}, 400000);
+
+
+
 	});
 
 });
