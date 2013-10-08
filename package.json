@@ -1,21 +1,23 @@
 {
-	"name": "bonfires",
-	"version": "0.0.2",
-	"description": "Enables WebRTC Peers to act as Signaling Servers",
-	"main": "bonfire.js",
-	"keywords": [
-		"Signal Peer",
-		"P2P"
-	],
-	"dependencies": {
-		"signalfire": "0.0.6"
-	},
-	"devDependencies": {
-	},
-	"contributors": [
-		{
-			"name": "Travis Wimer",
-			"url": "http://traviswimer.com"
-		}
-	]
+  "name": "bonfires",
+  "version": "0.0.3",
+  "description": "Enables WebRTC Peers to act as Signaling Servers",
+  "main": "bonfire.js",
+  "keywords": [
+    "Signal Peer",
+    "P2P"
+  ],
+  "dependencies": {
+    "signalfire": "0.0.6"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-uglify": "~0.2.4"
+  },
+  "contributors": [
+    {
+      "name": "Travis Wimer",
+      "url": "http://traviswimer.com"
+    }
+  ]
 }
